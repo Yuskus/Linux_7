@@ -1,0 +1,233 @@
+=========================
+
+Задание 1
+
+--------------------
+
+117 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg —dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+118 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg —dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+119 echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+120 apt update
+121 apt-cache policy docker-ce
+122 apt install docker-ce docker-ce-cli containerd.io
+123 systemctl enable docker
+124 docker -v
+125 apt install docker-compose
+126 docker-compose -v
+127 apt-get —purge docker-compose
+128 history
+129 apt-get purge docker-compose
+130 apt-get autoremove
+131 history
+132 curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+133 docker-compose -v
+134 curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(yuskus -s)-$(yuskus -m)" -o /usr/local/bin/docker-compose
+135 chmod +x /usr/local/bin/docker-compose
+136 docker-compose -v
+137 apt install docker-compose-plugin
+138 docker compose -v
+139 docker compose —help
+140 docker compose COMMAND —help
+141 docker-compose -v
+142 docker-compose-plugin -v
+143 docker compose version
+144 docker pull mysql
+145 systemctl status docker
+146 sudo usermod -aG docker yuskus
+147 systemctl status docker
+148 systemctl restart docker
+149 systemctl status docker
+150 docker pull mysql
+151 docker pull phpmyadmin
+152 mkdir new
+153 cd new
+154 nano docker-compose.yml
+155 docker compose up -d
+156 nano docker-compose.yml
+157 docker compose up -d
+158 nano docker-compose.yml
+159 docker compose up -d
+160 nano docker-compose.yml
+161 docker compose up -d
+162 nano docker-compose.yml
+163 docker compose up -d
+164 nano docker-compose.yml
+165 docker compose up -d
+166 nano docker-compose.yml
+167 docker compose up -d
+168 docker ps
+169 docker ps -a
+170 docker compose up
+171 docker ps -a
+172 docker ps
+173 docker compose down
+174 nano docker-compose.yml
+175 docker compose up -d
+176 docker ps
+177 docker ps -a
+178 nano docker-compose.yml
+179*
+180 docker rm 3f109c639206
+181 docker rm 205e31441b6c
+182 docker compose up -d
+183 nano docker-compose.yml
+184 docker ps -a
+185 docker rm c6ea30d0e0f3
+186 docker rm 48441e2e93c0
+187 docker compose up -d
+188 docker ps -a
+189 docker ps
+190 cat docker-compose.yml
+191 docker compose down
+192 nano docker-compose.yml
+193 docker ps -a
+194 docker compose up -d
+195 history
+
+====================
+
+Задание 2
+
+--------------------
+
+~/wordpress/nginx-conf/nginx.conf (1)
+
+---
+
+server {
+        listen 80;
+        listen [::]:80;
+
+        server_name example.com www.example.com;
+
+        index index.php index.html index.htm;
+
+        root /var/www/html;
+
+        location ~ /.well-known/acme-challenge {
+                allow all;
+                root /var/www/html;
+        }
+
+        location / {
+                try_files $uri $uri/ /index.php$is_args$args;
+        }
+
+        location ~ \.php$ {
+                try_files $uri =404;
+                fastcgi_split_path_info ^(.+\.php)(/.+)$;
+                fastcgi_pass wordpress:9000;
+                fastcgi_index index.php;
+                include fastcgi_params;
+                fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+                fastcgi_param PATH_INFO $fastcgi_path_info;
+        }
+
+        location ~ /\.ht {
+                deny all;
+        }
+
+        location = /favicon.ico {
+                log_not_found off; access_log off;
+        }
+        location = /robots.txt {
+                log_not_found off; access_log off; allow all;
+        }
+        location ~* \.(css|gif|ico|jpeg|jpg|js|png)$ {
+                expires max;
+                log_not_found off;
+        }
+}
+
+-------------------------
+
+~/wordpress/.env (2)
+
+---
+
+MYSQL_ROOT_PASSWORD=your_root_password
+MYSQL_USER=your_wordpress_database_user
+MYSQL_PASSWORD=your_wordpress_database_password
+
+-------------------------
+
+~/wordpress/.dockerignore (3)
+
+---
+
+.env
+.git
+docker-compose.yml
+.dockerignore
+
+-------------------------
+
+~/wordpress/docker-compose.yml (4)
+
+---
+
+version: '3'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: db
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - MYSQL_DATABASE=wordpress
+    volumes:
+      - dbdata:/var/lib/mysql
+    command: '--default-authentication-plugin=mysql_native_password'
+    networks:
+      - app-network
+
+  wordpress:
+    depends_on:
+      - db
+    image: wordpress:5.1.1-fpm-alpine
+    container_name: wordpress
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - WORDPRESS_DB_HOST=db:3306
+      - WORDPRESS_DB_USER=$MYSQL_USER
+      - WORDPRESS_DB_PASSWORD=$MYSQL_PASSWORD
+      - WORDPRESS_DB_NAME=wordpress
+    volumes:
+      - wordpress:/var/www/html
+    networks:
+      - app-network
+
+  webserver:
+    depends_on:
+      - wordpress
+    image: nginx:1.15.12-alpine
+    container_name: webserver
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - wordpress:/var/www/html
+      - ./nginx-conf:/etc/nginx/conf.d
+    networks:
+      - app-network
+
+volumes:
+  wordpress:
+  dbdata:
+
+networks:
+  app-network:
+    driver: bridge 
+
+--------------------
+
+mkdir wordpress && cd wordpress
+mkdir nginx-conf
+nano nginx-conf/nginx.conf (1)
+nano .env (2)
+nano .dockerignore (3)
+nano docker-compose.yml (4)
+docker-compose up -d
